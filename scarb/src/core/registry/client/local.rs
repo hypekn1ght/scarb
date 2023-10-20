@@ -97,9 +97,12 @@ impl RegistryClient for LocalRegistryClient {
     async fn get_records(
         &self,
         package: PackageName,
+        cache_key: Option<&str>,
         _: BeforeNetworkCallback,
     ) -> Result<RegistryResource<IndexRecords>> {
         trace!(?package);
+
+        assert!(cache_key.is_none());
 
         let records_path = self.records_path(&package);
 

@@ -49,6 +49,7 @@ pub trait RegistryClient: Send + Sync {
     async fn get_records(
         &self,
         package: PackageName,
+        cache_key: Option<&str>,
         before_network: BeforeNetworkCallback,
     ) -> Result<RegistryResource<IndexRecords>>;
 

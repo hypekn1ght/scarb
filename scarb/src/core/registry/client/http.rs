@@ -80,6 +80,7 @@ impl<'c> RegistryClient for HttpRegistryClient<'c> {
     async fn get_records(
         &self,
         package: PackageName,
+        _cache_key: Option<&str>,
         before_network: BeforeNetworkCallback,
     ) -> Result<RegistryResource<IndexRecords>> {
         let index_config = self.index_config().await?;
