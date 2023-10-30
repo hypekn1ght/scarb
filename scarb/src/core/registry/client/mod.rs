@@ -1,10 +1,8 @@
-use std::path::PathBuf;
-
 use anyhow::Result;
 use async_trait::async_trait;
 
 use crate::core::registry::index::IndexRecords;
-use crate::core::{Package, PackageId, PackageName};
+use crate::core::{Config, Package, PackageId, PackageName};
 use crate::flock::FileLockGuard;
 
 pub mod cache;
@@ -28,6 +26,7 @@ pub enum RegistryResource<T> {
 }
 
 pub type BeforeNetworkCallback = Box<dyn FnOnce() -> Result<()> + Send>;
+pub type CreateScratchFileCallback = Box<dyn FnOnce(&Config) -> Result<FileLockGuard> + Send>;
 
 #[async_trait]
 pub trait RegistryClient: Send + Sync {
@@ -54,7 +53,7 @@ pub trait RegistryClient: Send + Sync {
 
     /// Download the package `.tar.zst` file.
     ///
-    /// Returns a [`PathBuf`] to the downloaded `.tar.zst` file.
+    /// Returns a [`FileLockGuard`] to the downloaded `.tar.zst` file.
     ///
     /// ## Callbacks
     ///
@@ -62,15 +61,21 @@ pub trait RegistryClient: Send + Sync {
     /// It might return an error which **must** be immediately bubbled out. If this client does not
     /// perform network requests, this callback **must** not be called at all.
     ///
+    /// For the `create_scratch_file` callback, refer to the _Caching_ section.
+    ///
     /// ## Caching
     ///
     /// This method is not expected to internally cache the result, but it is not prohibited either.
-    /// Scarb applies specialized caching layers on top of clients.
+    /// The `create_scratch_file` callback provided from higher caching layers or Scarb provide
+    /// a possibility to create an output file in a cache directory, in way that is understandable
+    /// by these caching machineries.
     async fn download(
         &self,
         package: PackageId,
+        cache_key: Option<&str>,
         before_network: BeforeNetworkCallback,
-    ) -> Result<RegistryResource<PathBuf>>;
+        create_scratch_file: CreateScratchFileCallback,
+    ) -> Result<RegistryResource<FileLockGuard>>;
 
     /// State whether packages can be published to this registry.
     ///

@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use redb::{MultimapTableDefinition, ReadableMultimapTable, ReadableTable, TableDefinition};
@@ -10,9 +8,12 @@ use tracing::trace;
 
 use scarb_ui::Ui;
 
-use crate::core::registry::client::{BeforeNetworkCallback, RegistryClient, RegistryResource};
+use crate::core::registry::client::{
+    BeforeNetworkCallback, CreateScratchFileCallback, RegistryClient, RegistryResource,
+};
 use crate::core::registry::index::{IndexRecord, IndexRecords};
 use crate::core::{Config, ManifestDependency, PackageId, SourceId};
+use crate::flock::{FileLockGuard, Filesystem};
 use crate::internal::fsx;
 
 // TODO(mkaput): Implement cache downloading.
@@ -68,6 +69,7 @@ pub struct RegistryClientCache<'c> {
     client: Box<dyn RegistryClient + 'c>,
     db_cell: OnceCell<CacheDatabase>,
     config: &'c Config,
+    dl_fs: Filesystem,
 }
 
 impl<'c> RegistryClientCache<'c> {
@@ -76,11 +78,18 @@ impl<'c> RegistryClientCache<'c> {
         client: Box<dyn RegistryClient + 'c>,
         config: &'c Config,
     ) -> Result<Self> {
+        let dl_fs = config
+            .dirs()
+            .registry_dir()
+            .into_child("dl")
+            .into_child(source_id.ident());
+
         Ok(Self {
             source_id,
             client,
             db_cell: OnceCell::new(),
             config,
+            dl_fs,
         })
     }
 
@@ -133,8 +142,23 @@ impl<'c> RegistryClientCache<'c> {
         &self,
         package: PackageId,
         before_network: BeforeNetworkCallback,
-    ) -> Result<PathBuf> {
-        match self.client.download(package, before_network).await? {
+    ) -> Result<FileLockGuard> {
+        // TODO
+        let tarball_name = package.tarball_name();
+        let db = self.db().await?;
+
+        let cache_key = None;
+
+        let create_scratch_file: CreateScratchFileCallback = Box::new({
+            let dl_fs = self.dl_fs.clone();
+            move |config: &Config| dl_fs.open_rw(&tarball_name, &tarball_name, config)
+        });
+
+        match self
+            .client
+            .download(package, cache_key, before_network, create_scratch_file)
+            .await?
+        {
             RegistryResource::NotFound => {
                 trace!("archive not found in registry, pruning cache");
                 bail!("could not find downloadable archive for package indexed in registry: {package}")
