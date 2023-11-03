@@ -837,3 +837,31 @@ fn ignore_whitelist_pattern() {
             src/lib.cairo
         "#}));
 }
+
+#[test]
+fn no_lib_target() {
+    let t = TempDir::new().unwrap();
+    let name = "foo";
+    let version = "1.0.0";
+    ProjectBuilder::start()
+        .name(name)
+        .version(version)
+        .manifest_extra(indoc! {r#"
+        [[target.starknet-contract]]
+        "#})
+        .build(&t);
+
+    Scarb::quick_snapbox()
+        .arg("package")
+        .current_dir(&t)
+        .assert()
+        .failure()
+        .stdout_matches(formatdoc! {r#"
+        [..] Packaging {name} v{version} [..]
+        error: package `{name}` does not provide a `[lib]` target.
+        if a package does not provide a library target, it cannot be used as a dependency.
+        help: add `[lib]` section to package manifest
+         --> Scarb.toml
+        +   [lib]
+        "#});
+}

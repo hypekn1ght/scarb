@@ -4,7 +4,7 @@ use std::io::{Seek, SeekFrom, Write};
 
 use anyhow::{bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
-use indoc::writedoc;
+use indoc::{formatdoc, writedoc};
 
 use scarb_ui::components::Status;
 use scarb_ui::{HumanBytes, HumanCount};
@@ -156,6 +156,20 @@ fn list_one_impl(
 }
 
 fn prepare_archive_recipe(pkg: &Package) -> Result<ArchiveRecipe> {
+    ensure!(
+        pkg.manifest.targets.iter().any(|x| x.is_lib()),
+        formatdoc! {
+            r#"
+            package `{package_name}` does not provide a `[lib]` target.
+            if a package does not provide a library target, it cannot be used as a dependency.
+            help: add `[lib]` section to package manifest
+             --> Scarb.toml
+            +   [lib]
+            "#,
+            package_name=pkg.id.name,
+        }
+    );
+
     let mut recipe = source_files(pkg)?;
 
     // Sort the recipe before any checks, to ensure generated errors are reproducible.
