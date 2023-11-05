@@ -1,4 +1,5 @@
 use std::fs;
+use std::io::BufRead;
 
 use assert_fs::prelude::*;
 use assert_fs::TempDir;
@@ -634,4 +635,55 @@ fn workspace_as_dep() {
                 r#""debug_name":"get_builtin_costs""#,
             )),
     );
+}
+
+#[test]
+fn can_define_edition() {
+    let t = TempDir::new().unwrap();
+    ProjectBuilder::start().edition("2023_01").build(&t);
+
+    let output = Scarb::quick_snapbox()
+        .arg("build")
+        .env("SCARB_LOG", "scarb=trace")
+        .current_dir(&t)
+        .output()
+        .expect("Failed to spawn command");
+
+    // Find project_config trace
+    for line in BufRead::split(output.stderr.as_slice(), b'\n') {
+        let line = line.expect("Failed to read line from stdout");
+        let line = String::from_utf8_lossy(&line);
+        if line.contains("project_config") {
+            // Actually match the output
+            snapbox::assert_matches(
+                r#"[..]ProjectConfig { base_path: "[..]", corelib: Some(Real("[..]")), content: ProjectConfigContent { crate_roots: OrderedHashMap({"pkg0": "[..]"}), crates_config: AllCratesConfig { global: SingleCrateConfig { edition: V2023_01 }, override_map: OrderedHashMap({"pkg0": SingleCrateConfig { edition: V2023_01 }, "core": SingleCrateConfig { edition: V2023_01 }}) } } }[..]"#,
+                line.as_ref(),
+            );
+            return;
+        }
+    }
+
+    panic!("Failed to find project_config in stderr");
+}
+
+#[test]
+fn edition_must_exist() {
+    let t = TempDir::new().unwrap();
+    ProjectBuilder::start().edition("2021").build(&t);
+
+    Scarb::quick_snapbox()
+        .arg("fetch")
+        .current_dir(&t)
+        .assert()
+        .failure()
+        .stdout_matches(indoc! {r#"
+             error: failed to parse manifest at: /[..]/Scarb.toml
+
+             Caused by:
+                 TOML parse error at line 4, column 11
+                   |
+                 4 | edition = "2021"
+                   |           ^^^^^^
+                 unknown variant `2021`, expected `2023_01` or `2023_10`
+        "#});
 }
