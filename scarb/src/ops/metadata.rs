@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, HashMap};
 use anyhow::{bail, Result};
 use itertools::Itertools;
 use semver::{Version, VersionReq};
+use serde_variant::to_variant_name;
 use smol_str::SmolStr;
 
 use scarb_metadata as m;
@@ -125,10 +126,13 @@ fn collect_package_metadata(package: &Package) -> m::PackageMetadata {
         .build()
         .unwrap();
 
+    let edition = to_variant_name(&package.manifest.edition).unwrap();
+
     m::PackageMetadataBuilder::default()
         .id(wrap_package_id(package.id))
         .name(package.id.name.clone())
         .version(package.id.version.clone())
+        .edition(edition)
         .source(wrap_source_id(package.id.source_id))
         .manifest_path(package.manifest_path())
         .root(package.root())

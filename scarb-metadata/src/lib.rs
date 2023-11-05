@@ -208,6 +208,9 @@ pub struct PackageMetadata {
     /// Package version as given in `Scarb.toml`.
     pub version: Version,
 
+    /// Package edition as given in `Scarb.toml`.
+    pub edition: String,
+
     /// The source of the package.
     pub source: SourceId,
 
