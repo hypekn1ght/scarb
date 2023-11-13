@@ -23,7 +23,7 @@ thiserror = { workspace = true, optional = true }
 
 [dev-dependencies]
 assert_fs.workspace = true
-cairo-lang-filesystem.workspace = true
+cairo-lang-filesystem = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
 snapbox.workspace = true
 
 [features]

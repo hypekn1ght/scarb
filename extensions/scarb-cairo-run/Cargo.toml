@@ -8,8 +8,8 @@ authors.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-cairo-lang-runner.workspace = true
-cairo-lang-sierra.workspace = true
+cairo-lang-runner = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-sierra = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
 camino.workspace = true
 clap.workspace = true
 scarb-metadata = { path = "../../scarb-metadata", features = ["packages_filter"] }

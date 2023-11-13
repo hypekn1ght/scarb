@@ -8,10 +8,10 @@ authors.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-cairo-lang-compiler.workspace = true
-cairo-lang-filesystem.workspace = true
-cairo-lang-starknet.workspace = true
-cairo-lang-test-runner.workspace = true
+cairo-lang-compiler = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-filesystem = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-starknet = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-test-runner = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
 clap.workspace = true
 scarb-metadata = { path = "../../scarb-metadata", features = ["packages_filter"] }
 serde_json.workspace = true

@@ -15,13 +15,13 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 async-trait.workspace = true
-cairo-lang-compiler.workspace = true
-cairo-lang-filesystem.workspace = true
-cairo-lang-formatter.workspace = true
-cairo-lang-semantic.workspace = true
-cairo-lang-sierra-to-casm.workspace = true
-cairo-lang-starknet.workspace = true
-cairo-lang-utils.workspace = true
+cairo-lang-compiler = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-filesystem = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-formatter = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-semantic = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-sierra-to-casm = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-starknet = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
+cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo", rev = "0f77760" }
 camino.workspace = true
 clap-verbosity-flag.workspace = true
 clap.workspace = true
